@@ -65,11 +65,11 @@ for i in range(2):
     seq.add_block(gx, adc)
     seq.add_block(delay3)
 
-# Display 1 TR
+# Display 2 TR
 seq.plot(time_range=(0, 2 * TR))
 
 # Display entire plot
 # seq.plot()
 
 # The .seq file will be available inside the /gpi/<user>/imr_framework folder
-# seq.write("se_python.seq")
+seq.write("se_python.seq")

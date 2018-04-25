@@ -49,7 +49,6 @@ def make_sinc_pulse(kwargs, nargout=1):
     signal = np.multiply(window, np.sinc(BW * tt))
     flip = np.sum(signal) * system.rf_raster_time * 2 * np.pi
     signal = signal * flip_angle / flip
-    # theta = gammaBar integ(0 to tprime) B1 dt
 
     rf = Holder()
     rf.type = 'rf'

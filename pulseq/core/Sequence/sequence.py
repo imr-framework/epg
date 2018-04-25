@@ -1,11 +1,10 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from pulseq.core.calc_duration import calc_duration
 
-import pulseq.core.calc_duration
 from pulseq.core.Sequence import block
 from pulseq.core.Sequence.read_seq import read
 from pulseq.core.Sequence.write_seq import write
+from pulseq.core.calc_duration import calc_duration
 from pulseq.core.event_lib import EventLibrary
 from pulseq.core.opts import Opts
 
@@ -114,7 +113,7 @@ class Sequence:
                                 t = np.cumsum([0, grad.rise_time, grad.flat_time, grad.fall_time])
                                 waveform = [1e-3 * grad.amplitude * x for x in [0, 1, 1, 0]]
                             f2[x].plot(np.squeeze(t0 + t), waveform)
-            t0 += core.calc_duration.calc_duration(block)
+            t0 += calc_duration(block)
 
         f11.set_ylabel('adc')
         f12.set_ylabel('rf mag hz')

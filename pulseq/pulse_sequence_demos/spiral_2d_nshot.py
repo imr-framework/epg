@@ -24,7 +24,7 @@ Nx = 128
 Ny = 256
 slice_thickness = 5e-3
 dx = fov / Nx
-TR = 20e-3
+TR = 25e-3
 TE = 5e-3
 
 n_shots = 16
@@ -63,22 +63,26 @@ delayTR = TR - calc_duration(gz_reph) - calc_duration(rf) - calc_duration(gx) - 
 delay1 = make_delay(delayTE)
 delay2 = make_delay(delayTR)
 
-for s in range(n_slices):
-    freq_offset = gz.amplitude * z[s]
-    rf.freq_offset = freq_offset
+for s in range(n_slices): w
+freq_offset = gz.amplitude * z[s]
+rf.freq_offset = freq_offset
 
-    for ns in range(n_shots):
-        seq.add_block(rf, gz)
-        seq.add_block(gz_reph)
+for ns in range(n_shots):
+    seq.add_block(rf, gz)
+    seq.add_block(gz_reph)
 
-        kwargs_for_arb_gx = {"channel": 'x', 'system': system, 'waveform': np.squeeze(np.real(G[:, ns]))}
-        gx = makearbitrary_grad(kwargs_for_arb_gx)
-        kwargs_for_arb_gy = {"channel": 'y', 'system': system, 'waveform': np.squeeze(np.imag(G[:, ns]))}
-        gy = makearbitrary_grad(kwargs_for_arb_gy)
+    kwargs_for_arb_gx = {"channel": 'x', 'system': system, 'waveform': np.squeeze(np.real(G[:, ns]))}
+    gx = makearbitrary_grad(kwargs_for_arb_gx)
+    kwargs_for_arb_gy = {"channel": 'y', 'system': system, 'waveform': np.squeeze(np.imag(G[:, ns]))}
+    gy = makearbitrary_grad(kwargs_for_arb_gy)
 
-        seq.add_block(delay1)
-        seq.add_block(gx, gy, adc)
-        seq.add_block(gz_spoil)
-        seq.add_block(delay2)
+    seq.add_block(delay1)
+    seq.add_block(gx, gy, adc)
+    seq.add_block(gz_spoil)
+    seq.add_block(delay2)
 
-seq.write('/Users/sravan953/Desktop/spiral_2d_256_9_3_16_python.seq')
+# Display entire plot
+seq.plot()
+
+# The .seq file will be available inside the /gpi/<user>/imr_framework folder
+seq.write('spiral_2d_256_9_3_16_python.seq')

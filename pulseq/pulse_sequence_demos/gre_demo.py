@@ -4,6 +4,7 @@ This is starter code to demonstrate a working example of the Gradient Recalled E
 from math import pi
 
 import numpy as np
+
 from pulseq.core.Sequence.sequence import Sequence
 from pulseq.core.calc_duration import calc_duration
 from pulseq.core.make_adc import makeadc
@@ -12,15 +13,6 @@ from pulseq.core.make_sinc import make_sinc_pulse
 from pulseq.core.make_trap import make_trapezoid
 from pulseq.core.opts import Opts
 
-"""
-GRE:
-flip: 0.2617993877991494
-delays: 0.002775, 0.004775
--gx.area/2 = -145.681818
--gz.area/2 = -403
-gx.flat_time = 0.0064
-gx.rise_time = 1e-5
-"""
 kwargs_for_opts = {"rf_ring_down_time": 30e-6, "rf_dead_time": 100e-6}
 system = Opts(kwargs_for_opts)
 seq = Sequence(system)
@@ -30,7 +22,7 @@ Nx = 256
 Ny = 256
 slice_thickness = 5e-3
 
-flip = 20 * pi / 180
+flip = 15 * pi / 180
 kwargs_for_sinc = {"flip_angle": flip, "system": system, "duration": 4e-3, "slice_thickness": slice_thickness,
                    "apodization": 0.5, "time_bw_product": 4}
 rf, gz = make_sinc_pulse(kwargs_for_sinc, 2)
@@ -58,19 +50,19 @@ delay1 = make_delay(delayTE)
 delay2 = make_delay(delayTR)
 
 for i in range(Ny):
-    # seq.add_block(rf, gz)
+    seq.add_block(rf, gz)
     kwargsForGyPre = {"channel": 'y', "system": system, "area": phase_areas[i], "duration": 2e-3}
     gyPre = make_trapezoid(kwargsForGyPre)
     seq.add_block(gx_pre, gyPre, gz_reph)
-    # seq.add_block(delay1)
-    # seq.add_block(gx, adc)
-    # seq.add_block(delay2)
+    seq.add_block(delay1)
+    seq.add_block(gx, adc)
+    seq.add_block(delay2)
 
 # Display 1 TR
-# seq.plot(time_range=(0, TR))
+seq.plot(time_range=(0, TR))
 
 # Display entire plot
 # seq.plot()
 
 # The .seq file will be available inside the /gpi/<user>/imr_framework folder
-seq.write("gre_python.seq")
+# seq.write("gre_python.seq")

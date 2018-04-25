@@ -44,10 +44,8 @@ def vds_2d(fov, N, n_shots, alpha, system):
     ts2a = pow((pow(tes, (alpha + 1) / (alpha / 2 + 1)) * (alpha / 2 + 1) / tea / (alpha + 1)), (1 + 2 / alpha))
 
     if ts2a < tes:
-        tau_trans = (ts2a / tes) ^ (1 / (alpha / 2 + 1))
-        tau = lambda t: (t / tes) ^ (1 / (alpha / 2 + 1)) * (0 <= t) * (t <= ts2a) + (
-                (t - ts2a) / tea + tau_trans ^ (alpha + 1)) ^ (1 / (alpha + 1)) * (t > ts2a) * (t <= tea) * (
-                                tes >= ts2a)
+        tau_trans = pow(ts2a / tes, 1 / (alpha / 2 + 1))
+        tau = lambda t: pow(t / tes, 1 / (alpha / 2 + 1)) * (0 <= t) * (t <= ts2a) + pow((((t - ts2a) / tea) + pow(tau_trans, alpha + 1)), 1 / (alpha + 1)) * (t > ts2a) * (t <= tea) * (tes >= ts2a)
         t_end = tea
     else:
         tau = lambda t: pow((t / tes), (1 / (alpha / 2 + 1)) * (0 <= t) * (t <= tes))

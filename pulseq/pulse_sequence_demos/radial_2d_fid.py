@@ -81,4 +81,8 @@ for s in range(n_slices):
         seq.add_block(gz_spoil)
         seq.add_block(delay2)
 
-seq.write('/Users/sravan953/Desktop/radial_2d_256_3_16_python.seq')
+# Display entire plot
+seq.plot()
+
+# The .seq file will be available inside the /gpi/<user>/imr_framework folder
+seq.write('radial_2d_256_3_16_python.seq')
