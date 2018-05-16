@@ -1,20 +1,7 @@
 %% Create a 3D radial FID sequence and export for execution
-% 
-% The |Sequence| class provides functionality to create magnetic
-% resonance sequences (MRI or NMR) from basic building blocks.
-%
-% This provides an implementation of the open file format for MR sequences
-% described here: http://pulseq.github.io/specification.pdf
-%
-% This example performs the following steps:
-% 
-% # Create slice selective RF pulse for imaging.
-% # Create readout gradients in both directions 
-% # Loop through number of  projections
-% # Write the sequence to an open file format suitable for execution on a
-% scanner.
-% Author: Sairam Geethanath - tricky with the slice sel gradient strength
-% :)
+% Author: Sairam Geethanath - 
+% Descritption - Allows the user to program and run a 3D UTE Radial
+% sequence on a Pulseq compatible scanner
 
 %% Instantiation and gradient limits
 % The system gradient limits can be specified in various units _mT/m_,
@@ -42,44 +29,26 @@ TR = 20e-3;
 TE = 0.5e-3;%minimum 
 dx = fov/Nx;
 dz  = sliceThickness/Nz;
+%% Define spoke angles - polar (theta); azimuthal (phi)
 radp = get_radkparams(dz,dx,fov,'3D');
-wr_traj =0;
-%% Slice selection
-% Key concepts in the sequence description are *blocks* and *events*.
-% Blocks describe a group of events that are executed simultaneously. This
-% hierarchical structure means that one event can be used in multiple
-% blocks, a common occurrence in MR sequences, particularly in imaging
-% sequences. 
-%
-% First, a slice selective RF pulse (and corresponding slice gradient) can
-% be generated using the |makeSincPulse| function.
-%
+wr_traj =0;%to write kspace trajectory for reconstruction - 1 yes
+theta = linspace(0,179,radp.Ntheta); %Polar
+phi = linspace(0,359,radp.Nphi); %azimuthal
+%% RF and spoiler
 flip=15*pi/180;
 st = 30e-3;
 % [rf, gz] = mr.makeSincPulse(flip,system,'Duration',1e-3,...
 %     'SliceThickness',sliceThickness,'apodization',0.5,'timeBwProduct',4);
 % [rf,gz]=mr.makeBlockPulse(flip, 'Duration',20e-6,'SliceThickness',st, 'system', system);
-% [rf,gz] = mr.makeBlockPulse(pi/30,'Duration',dw, 'SliceThickness',st ,'system', system);
+[~,gz] = mr.makeBlockPulse(pi/30,'Duration',dw, 'SliceThickness',st ,'system', system);
 rf_dur = 1*dw;
 [rf] = mr.makeBlockPulse(pi/30,'Duration',rf_dur, 'system', system);
 %% Gradients
-% To define the remaining encoding gradients we need to calculate the
-% $k$-space sampling. The Fourier relationship
-%
-% $$\Delta k = \frac{1}{FOV}$$
-% 
-% Therefore the area of the readout gradient is $n\Delta k$.
 deltak=1/fov;
 kWidth = Nx*deltak;
-
 readoutTime = 6.4e-3;
 gx = mr.makeTrapezoid('x',system,'FlatArea',kWidth,'FlatTime',readoutTime);
 adc = mr.makeAdc(Nx,'Duration',gx.flatTime,'Delay',gx.riseTime, 'system', system);
-
-%% Phase encoding
-% To move the $k$-space trajectory away from 0 prior to the readout a
-% prephasing gradient must be used. Furthermore rephasing of the slice
-% select gradient is required.
 preTime=8e-4; %Need to figure this one out later!
 gzReph = mr.makeTrapezoid('z',system,'Area',-gz.area/2,'Duration',0.5e-3);
 % gxSpoil = mr.makeTrapezoid('x',system,'Area',gz.area*2,'Duration',3*preTime);
@@ -101,9 +70,7 @@ delayTRs = delayTRs - mod(delayTRs, 1e-5);
 delay1 = mr.makeDelay(delayTE);
 delay2 = mr.makeDelay(delayTRps);
 delay3 = mr.makeDelay(delayTRs);
-%% Define spoke angles - polar (theta); azimuthal (phi)
-theta = linspace(0,179,radp.Ntheta); %Polar
-phi = linspace(0,359,radp.Nphi); %azimuthal
+
 
 %% Define sequence blocks
 ktraj = zeros(radp.Ns, adc.numSamples,3);
@@ -141,7 +108,6 @@ for nt=1:radp.Ntheta
 end
 %% Normalize the trajectory  and display the sequence
 ktrajs = ktraj./max(abs(ktraj(:)))./2;
-figure(1002);
 seq.plot_sg('TimeRange',[0 TR]);
 
 
