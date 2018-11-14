@@ -1,4 +1,0 @@
-function [Aircubes] = check_faceinair(Mass_cell,dimSize)
-
-
-for 
