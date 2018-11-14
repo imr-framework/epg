@@ -1,0 +1,41 @@
+function [Qcore,Qcorner,Qedge,Qface]= getQs(Q,Mass_cell,dim,x,y,z)
+
+x0 = x - dim;
+x1 = x + dim;
+
+y0 = y - dim;
+y1 = y + dim;
+
+z0 = z -dim;
+z1 = z + dim;
+
+
+for i = x0:x1
+    for j=y0:y1
+        for k = z0:z1
+   
+        M = getm(Mass_cell,i,j,k);
+       status = 0;
+							if (abs(i) == )
+							(
+								status++;
+							)
+							if (abs(y) == range)
+							(
+								status++;
+							)
+							if (abs(z) == range)
+							(
+								status++;
+							)
+        
+        
+        
+        end
+    end
+end
+
+function M = getm(Mass_cell,x,y,z)
+
+ M = (1/12).*((3*Mass_cell(x,y,z)) + (2*Mass_cell(x+1,y,z)) + (2*Mass_cell(x,y+1,z)) + (2*Mass_cell(x,y,z+1)) + ...
+                    Mass_cell(x+1,y+1,z) + Mass_cell(x+1,y,z+1) + Mass_cell(x,y+1,z+1));

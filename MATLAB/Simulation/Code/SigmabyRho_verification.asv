@@ -1,0 +1,23 @@
+%% Read the required data in
+% phantom data has e fields files named as_Ex while the VHM has _ex
+
+close all;
+SAR_type = 'Local';
+if(matlabpool('size') == 0)
+  matlabpool local 8;
+end
+
+            t0_local = cputime;
+                 [Qavg_df,Tissue_types,SbRx,Mass_cell,Mass_body] = gen_Q(dirname,'local','wholebody');%SbR stands for SigmabyRho
+            t1_local = cputime - t0_local;
+           
+                %% Save
+                Qavg.imp_sigmabyrho= Qavg_df;
+                save('LocalQ','Qavg','-v7.3');
+
+
+
+
+
+
+
