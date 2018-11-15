@@ -1,0 +1,3 @@
+TotalMass 104.874706
+HeadMass 6.503450
+ExposedMass 36.666021

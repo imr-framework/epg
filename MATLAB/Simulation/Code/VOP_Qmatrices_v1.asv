@@ -1,0 +1,92 @@
+%% This script describes the implementation of the VOP paper by Eichfelder
+clear all;
+load('Qavg_df.mat');
+% matlabpool local 2;
+[M,N,P,~,~]=size(Qavg_df);
+Qavg_df = reshape(Qavg_df,[M*N*P,8,8]);
+myu_def=0.4;%0.1360*2.9; %1% of norm(Bstar,2)
+disp(myu_def);
+
+%% Reduce data size - verify
+S = Qavg_df>0;
+ind = find(squeeze(S(:,4,4)));
+Qinds = squeeze(Qavg_df(ind,:,:));
+Qind = Qinds; %Store Qind for later.
+obs_pts = length(ind);
+cluster=zeros(1,100); %preallocating for speed.
+e = cluster;
+label=0;
+vop_map = zeros(M*N*P,1);
+indr = 1:length(ind);
+figure;
+dbstop if error;
+VOPm = zeros(500,8,8);
+%% Clustering process
+VOP=0;label=0;
+toc
+while(obs_pts > 0)
+    VOP = VOP+1; disp(VOP);
+    %% Selection of core matrix
+    [Bstar,ind_sorta] = get_coremat(Qind,indr);
+    A = Bstar;
+    if(numel(ind_sorta)>2)
+        ind_sort = squeeze(ind_sorta(2:end));
+    else
+        disp('Reached end of clustering, exiting....');
+        break;
+    end
+    
+    %% Set-up problem to find Z*
+ 
+    l=2;e=0;Z=zeros(8); 
+    cluster_done=0;
+    while (cluster_done==0)
+     
+        Q = A - squeeze(Qind(ind_sort(1),:,:));
+        [V,E] = eig(Q);
+        Ep = E;
+        Ep(Ep<0)=0;
+        Em = Ep - E;
+        Z = V*Em*V';                %Qm = V*E-*V';
+        myu_calc = norm(Z,2);
+
+                 if(myu_calc >= myu_def)
+                     cluster_done=1;
+                     indr=squeeze(setdiff(indr,(squeeze(ind_sorta(1:l-1)))) );
+                     cluster(VOP)=l-1;
+                     disp(cluster(VOP));
+%                      e(VOP) = -min(eig(A - squeeze(Qind(ind_sorta(l-1),:,:))));
+                     VOPm(VOP,:,:) =A;
+                     label=label+1;
+                     vop_map(ind(ind_sorta(1:l-1)))=label;
+                     S = reshape(vop_map,[M,N,P]);
+                     imagesc(abs(squeeze(S(30,:,:))));drawnow;
+                     
+                 else
+                    A = A + Z;
+                    obs_pts = obs_pts -1;
+                    lenind = length(ind_sort);
+                    switch lenind
+                        case 2
+                            ind_sort = squeeze(ind_sort(end));
+                        case 1
+                             label=label+1;
+                             vop_map(ind(ind_sorta(1:l-1)))=label;
+                             S = reshape(vop_map,[M,N,P]);
+                             imagesc(abs(squeeze(S(60,:,:))));drawnow;
+                                    break;
+                        otherwise
+                            ind_sort = squeeze(ind_sort(2:end));
+                    end
+                    l=l+1;
+                    if(mod(l,1000)==0)
+                        disp(l);
+                    end
+%                   
+                 end
+
+     end
+    
+    
+end
+toc;

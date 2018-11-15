@@ -1,0 +1,26 @@
+%% Check global Q for different shim values
+[Q] = read_qmat('globalQMatrix_human');
+x1 = [1 1 0 0 0 0 0 0];
+
+SAR_head = x1*(Q.Qhmf)*x1';
+SAR_wb = x1*Q.Qtmf*x1';
+SAR_exposed = x1*Q.Qemf*x1';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

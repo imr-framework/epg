@@ -1,0 +1,72 @@
+function AvgSize = get_avgsize(Mass_cell,Mdef)
+
+%% Variable initialization
+Mass_air = 1.625e-7 + 1e-9;
+D= size(Mass_cell);
+Max_range =10; %growing the size of the cube, can be even more restrictive
+AvgSize = zeros(size(Mass_cell));
+
+
+
+%% 
+
+for x=1:D(1)
+    for y=1:D(2)
+        for z=1:D(3)
+   
+        if(Mass_cell(x,y,z) > Mass_air)
+            Mcore = Mass_cell(x,y,z);
+            Mcorner =0;
+            Medge=0;
+            Mface=0;
+            dim =0;
+            Mtotal = Mcore + Mcorner + Medge + Mface;
+                
+                while((Mtotal < Mdef) && (dim < Max_range))
+                dim = dim +1;
+                Mcore = Mtotal;
+                
+                %% Corner Mass
+                
+                Mcorner = Mass_cell(x-dim,y-dim,z-dim) + Mass_cell(x-dim,y-dim,z+dim) + Mass_cell(x-dim,y+dim,z-dim) + Mass_cell(x-dim,y+dim,z+dim)+ ...
+                          Mass_cell(x+dim,y-dim,z-dim)+ Mass_cell(x+dim,y-dim,z+dim) + Mass_cell(x+dim,y+dim,z-dim) + Mass_cell(x+dim,y+dim,z+dim); 
+
+                %% Edge Mass
+                Medge=0;
+                for k=-dim+1:dim-1 %Will start only from 2 onwards - clever imp from Philips
+                    Medge = Medge + ...
+                            Mass_cell(x-k,y-dim,z-dim)+ Mass_cell(x-k,y-dim,z+dim)+ Mass_cell(x-k,y+dim,z-dim) + Mass_cell(x-k,y+dim,z+dim) +...
+                            Mass_cell(x-dim,y-k,z-dim) + Mass_cell(x-dim,y-k,z+dim) + Mass_cell(x+dim,y-k,z-dim)+ Mass_cell(x+dim,y-k,z+dim) +...
+                            Mass_cell(x-dim,y-dim,z-k) + Mass_cell(x-dim,y+dim,z-k) + Mass_cell(x+dim,y-dim,z-k) + Mass_cell(x+dim,y+dim,z-k);
+                    
+                    
+                end
+                
+                
+                %% Face Mass
+                Mface=0;
+                for a = -dim+1:dim-1
+                    for b=-dim+1:dim-1
+                        Mface = Mface + ...
+                        
+                        
+                    end
+                end
+                
+                
+                Mtotal = Mcore + Mcorner + Medge + Mface;
+
+
+                end
+        else
+            
+        
+        
+        end
+        
+        
+        
+        
+        end
+    end
+end

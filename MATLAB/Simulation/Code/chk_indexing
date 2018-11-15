@@ -1,0 +1,10 @@
+%% Reading indices based on index file
+
+Qinds2 = zeros(120,90,386);
+
+torso = find(squeeze(Qavg.index(4,:))==2);
+
+for k=1:length(torso)
+    ind = torso(k);
+    Qinds2(Qavg.index(1,ind)+1,Qavg.index(2,ind)+1,Qavg.index(2,ind)+1)=2;
+end

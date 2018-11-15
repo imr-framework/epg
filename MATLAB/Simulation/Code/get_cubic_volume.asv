@@ -1,0 +1,281 @@
+function Qavg = get_cubic_volume(R,Mass_cell,Mdef,Qpwr)
+%% Units are all in W,kg, mm3
+x=R(1);
+y=R(2);
+z=R(3);
+
+%% Start with a 1 x 1 x 1 cube
+N=1; 
+mC = squeeze(Mass_cell(x,y,z));
+Mcore=sum(mC(:));
+    
+
+%% Grow cube
+    while (Mcore < Mdef)
+        N=N+2;
+        Mcore = get_cube_mass(N,x,y,z,Mass_cell);
+        % Will put in the air check a little later.
+       
+    end
+    
+    
+    %% The core is the last cube which did not reach critical mass
+    % The rest of the masses are for the additional layer
+    
+    [Mcore,Qcore,Mcorner,Medge,Mface,Qcorner,Qedge,Qface]  = get_cube_mass(N-2,x,y,z,Mass_cell,Qpwr);
+    kdf = Mdef - Mcore;       
+    f=roots([Mcorner,Medge,Mface,-kdf]);
+    f = f(f>0);
+    %% Need to add f fraction of the Qpwr to make it proportional to the
+    % 10g average
+    Qavg = (Qcore + f.*(Qcorner + Qedge + Qface))./Mdef;
+             
+
+function [mCore,qCore,mCorner,mEdge,mFace,qCorner,qEdge,qFace] = get_cube_mass(N,x,y,z,Mass_cell,Q)
+    C = zeros(3,N);
+    N = (N-1)/2;
+    
+        C(1,:) = x-N:x+N;
+        C(2,:)=  y-N:y+N;
+        C(3,:) = z-N:z+N;
+        m = squeeze(Mass_cell(C(1,:),C(2,:),C(3,:))); 
+        mCore = sum(m(:));
+        
+       
+        
+if(nargout >1)
+     q = squeeze(Q(C(1,:),C(2,:),C(3,:),:,:));
+     D = size(q);
+     q = reshape(q,[prod(D(1:3)),8,8]);
+     qCore = squeeze(sum(q,1));
+    
+    
+    N = N + 1; % Want outer layer evaluation and then the fraction of it
+    %% Corners
+    Corner = zeros(8,3);
+    Corner(1,:) = [x-N, y-N, z-N];
+    Corner(2,:) = [x-N, y-N, z+N];
+    
+    Corner(3,:) = [x-N, y+N, z-N];
+    Corner(4,:) = [x-N, y+N, z+N];
+    
+    Corner(5,:) = [x+N, y-N, z-N];
+    Corner(6,:) = [x+N, y+N, z-N];  
+   
+    Corner(7,:) = [x+N, y-N, z+N];  
+    Corner(8,:) = [x+N, y+N, z+N];  
+    
+     mCorner=0;
+     qCorner=0;
+    for k=1:8
+          mCorner=   mCorner +(Mass_cell(Corner(k,1),Corner(k,2),Corner(k,3))); 
+          qCorner=   qCorner +squeeze((Q(Corner(k,1),Corner(k,2),Corner(k,3),:,:)));
+    end
+    
+
+    
+    
+    %% Edges - 12 based on the corners 
+%      E = zeros(12,3,(2*N)+1);
+     mEdge=0;
+     qEdge =0;
+    % along z
+%     E(1,1,:) = Corner(1,1);
+%     E(1,2,:) = Corner(1,2);
+%     E(1,3,:) = Corner(1,3):Corner(2,3);
+%     plot_edges(squeeze(E(1,:,:)));
+    
+    m = squeeze(Mass_cell(Corner(1,1),Corner(1,2),Corner(1,3):Corner(2,3)));
+    mEdge = mEdge + sum(m(:));
+    
+    q = squeeze(Q(Corner(1,1),Corner(1,2),Corner(1,3):Corner(2,3),:,:));
+    qEdge = qEdge +  squeeze(sum(q,1));
+    
+    
+%     E(2,1,:) = Corner(3,1);
+%     E(2,2,:) = Corner(3,2);
+%     E(2,3,:) = Corner(3,3):Corner(4,3);
+%     plot_edges(squeeze(E(2,:,:)));
+    m = squeeze(Mass_cell(Corner(3,1),Corner(3,2),Corner(3,3):Corner(4,3)));
+    mEdge = mEdge + sum(m(:));
+    
+    q = squeeze(Q(Corner(3,1),Corner(3,2),Corner(3,3):Corner(4,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));
+    
+    
+%     E(3,1,:) = Corner(5,1);
+%     E(3,2,:) = Corner(5,2);
+%     E(3,3,:) = Corner(5,3):Corner(7,3);
+%     plot_edges(squeeze(E(3,:,:)));
+    m = squeeze(Mass_cell(Corner(5,1),Corner(5,2),Corner(5,3):Corner(7,3)));
+    mEdge = mEdge + sum(m(:)); 
+    
+     q = squeeze(Q(Corner(5,1),Corner(5,2),Corner(5,3):Corner(7,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));
+    
+%     E(4,1,:) = Corner(6,1);
+%     E(4,2,:) = Corner(6,2);
+%     E(4,3,:) = Corner(6,3):Corner(8,3);
+%     plot_edges(squeeze(E(4,:,:)));
+    m = squeeze(Mass_cell(Corner(6,1),Corner(6,2),Corner(6,3):Corner(8,3)));
+    mEdge = mEdge + sum(m(:));
+    
+    q = squeeze(Q(Corner(6,1),Corner(6,2),Corner(6,3):Corner(8,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));
+  
+    %% along y
+%     E(5,1,:) = Corner(1,1);
+%     E(5,2,:) = Corner(1,2):Corner(3,2);
+%     E(5,3,:) = Corner(1,3);
+%     plot_edges(squeeze(E(5,:,:)));
+    m = squeeze(Mass_cell(Corner(1,1),Corner(1,2):Corner(3,2),Corner(1,3)));
+    mEdge = mEdge + sum(m(:));    
+    
+    q = squeeze(Q(Corner(1,1),Corner(1,2):Corner(3,2),Corner(1,3),:,:));
+    qEdge = qEdge +squeeze(sum(q,1));
+
+% 
+%     E(6,1,:) = Corner(2,1);
+%     E(6,2,:) = Corner(2,2):Corner(4,2);
+%     E(6,3,:) = Corner(2,3);
+%     plot_edges(squeeze(E(6,:,:)));
+    m = squeeze(Mass_cell(Corner(2,1),Corner(2,2):Corner(4,2),Corner(2,3)));
+    mEdge = mEdge + sum(m(:));   
+    
+    q = squeeze(Q(Corner(2,1),Corner(2,2):Corner(4,2),Corner(2,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));  
+        
+    
+%     E(7,1,:) = Corner(5,1);
+%     E(7,2,:) = Corner(5,2):Corner(6,2);
+%     E(7,3,:) = Corner(5,3);
+%     plot_edges(squeeze(E(7,:,:)));
+    m = squeeze(Mass_cell(Corner(5,1),Corner(5,2):Corner(6,2),Corner(5,3)));
+    mEdge = mEdge + sum(m(:));   
+    
+    q = squeeze(Q(Corner(5,1),Corner(5,2):Corner(6,2),Corner(5,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));   
+       
+%     E(8,1,:) = Corner(7,1);
+%     E(8,2,:) = Corner(7,2):Corner(8,2);
+%     E(8,3,:) = Corner(7,3);
+%     plot_edges(squeeze(E(8,:,:)));  
+    m = squeeze(Mass_cell(Corner(7,1),Corner(7,2):Corner(8,2),Corner(7,3)));
+    mEdge = mEdge + sum(m(:));   
+    
+    q = squeeze(Q(Corner(7,1),Corner(7,2):Corner(8,2),Corner(7,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));
+    
+    %% along x
+%     E(9,1,:) = Corner(1,1):Corner(5,1);
+%     E(9,2,:) = Corner(1,2);
+%     E(9,3,:) = Corner(1,3);
+%     plot_edges(squeeze(E(9,:,:))); 
+    m = squeeze(Mass_cell(Corner(1,1):Corner(5,1),Corner(1,2),Corner(1,3)));
+    mEdge = mEdge + sum(m(:));   
+    
+    q = squeeze(Q(Corner(1,1):Corner(5,1),Corner(1,2),Corner(1,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));
+    
+%     E(10,1,:) = Corner(2,1):Corner(7,1);
+%     E(10,2,:) = Corner(2,2);
+%     E(10,3,:) = Corner(2,3);
+%     plot_edges(squeeze(E(10,:,:))); 
+    m = squeeze(Mass_cell(Corner(2,1):Corner(7,1),Corner(2,2),Corner(2,3)));
+    mEdge = mEdge + sum(m(:));   
+    
+    q = squeeze(Q(Corner(2,1):Corner(7,1),Corner(2,2),Corner(2,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));
+    
+    
+%     E(11,1,:) = Corner(3,1):Corner(6,1);
+%     E(11,2,:) = Corner(3,2);
+%     E(11,3,:) = Corner(3,3);
+%     plot_edges(squeeze(E(11,:,:))); 
+    m = squeeze(Mass_cell(Corner(3,1):Corner(6,1),Corner(3,2),Corner(3,3)));
+    mEdge = mEdge + sum(m(:));   
+    
+    q = squeeze(Q(Corner(3,1):Corner(6,1),Corner(3,2),Corner(3,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));  
+    
+%     E(12,1,:) = Corner(4,1):Corner(8,1);
+%     E(12,2,:) = Corner(4,2);
+%     E(12,3,:) = Corner(4,3);
+%     plot_edges(squeeze(E(12,:,:))); 
+    q = squeeze(Q(Corner(4,1):Corner(8,1),Corner(4,2),Corner(4,3),:,:));
+    qEdge = qEdge + squeeze(sum(q,1));
+    
+%%  Get the 6 faces based on edges.
+mFace =0;
+qFace=0;
+%% Face 1 Y-Z
+m = squeeze(Mass_cell(x-N,y-N:y+N,z-N:z+N));
+mFace = mFace + sum(m(:));
+
+q = squeeze(Q(x-N,y-N:y+N,z-N:z+N,:,:));
+qFace = qFace + squeeze(sum(q,1));
+
+
+%%  Face 2 Y-Z
+m = squeeze(Mass_cell(x+N,y-N:y+N,z-N:z+N));
+mFace = mFace + sum(m(:));
+
+q = squeeze(Q(x+N,y-N:y+N,z-N:z+N,:,:));
+qFace = qFace + squeeze(sum(q,1));
+
+%% Face 3 Z-X
+m = squeeze(Mass_cell(x-N:x+N,y-N,z-N:z+N));
+mFace = mFace + sum(m(:));
+
+q = squeeze(Q(x-N:x+N,y-N,z-N:z+N,:,:));
+qFace = qFace + squeeze(sum(q,1));
+
+%% Face 4 Z-X
+m = squeeze(Mass_cell(x-N:x+N,y+N,z-N:z+N));
+mFace = mFace + sum(m(:));
+
+q = squeeze(Q(x-N:x+N,y+N,z-N:z+N,:,:));
+qFace = qFace + squeeze(sum(q,1));
+
+%% Face 5 Y-X
+m = squeeze(Mass_cell(x-N:x+N,y-N:y+N,z-N));
+mFace = mFace + sum(m(:));
+
+q = squeeze(Q(x-N:x+N,y-N:y+N,z-N));
+qFace = qFace + squeeze(sum(q,1));
+
+%% Face 6 Y-X
+m = squeeze(Mass_cell(x-N:x+N,y-N:y+N,z+N));
+mFace = mFace + sum(m(:));
+
+q = squeeze(Q(x-N:x+N,y-N:y+N,z+N));
+qFace = qFace + squeeze(sum(q,1));
+
+
+
+
+
+
+
+
+
+
+
+
+end
+% end
+
+
+function plot_edges(s)
+    %% Plot z edges, uncomment for debugging
+    plot3(s(1,:),s(2,:),s(3,:),'*-'); hold on;
+    xlabel('x');ylabel('y');zlabel('z')
+    grid on;
+
+
+
+% function [Emass,Fmass]= get_coeffs(N,mv)
+% % Can make this faster by multiplying mv*N ahead of time, but readability
+% % decreases
+% Emass = 12.* mv.*N;
+% Fmass = 6.*mv.*N^2;

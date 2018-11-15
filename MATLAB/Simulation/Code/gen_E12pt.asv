@@ -1,0 +1,31 @@
+function E_pwr = gen_E12pt(E,X,SigmabyRho,Mass_cell)
+
+%% Get co-ordinates
+x = X(1);
+y=X(2);
+z=X(3);
+
+%% Define co-ordinates of the 12-point cube formulation
+X1 = [x,y+1,z];
+X2 = [x,y,z+1];
+X3 = [x,y+1,z+1];
+
+%%
+Y1 = [x+1,y,z];
+Y2 = [x,y,z+1];
+Y3 = [x+1,y,z+1];
+
+%%
+Z1 = [x+1,y,z];
+Z2 = [x,y+1,z];
+Z3 = [x+1,y+1,z];
+
+E1 = get_E(squeeze(E(X)),squeeze(SigmabyRho(X));
+
+Ex = get_E(
+
+E = 0.125.* (Ex + Ey +Ez); %actually 0.25 but 0.25/2*Rho not captured by the SigmabyRho matrix
+%
+
+function Epwr =get_E(E,SigmabyRho)
+Epwr = SigmabyRho.*E'*E;

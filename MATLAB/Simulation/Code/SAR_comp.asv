@@ -1,0 +1,8 @@
+
+
+
+S = eye(8);
+Iall = fft(S));
+
+I = squeeze(Iall(:,1));
+SAR = I'*Q.Qtmf*I;

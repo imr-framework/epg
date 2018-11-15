@@ -1,0 +1,6 @@
+This file describes the scripts to run for different cases
+Need to put all of them under one umbrella later
+
+1. Q_mat_gen - highest level script running Global and Local SAR for Philips and implemented model
+2. gen_Q - takes in the deadface files for inputs and generates Q matrices, local or global.
+3.

@@ -1,0 +1,89 @@
+%% This script describes the implementation of the VOP paper by Eichfelder
+% clear all;
+% [Filename,Pathname]=uigetfile('');
+%  load(fullfile(Pathname,Filename));
+%  Qavg_df = Qavg.imp;
+%  matlabpool local 8;
+% [M,N,P,~,~]=size(Qavg_df);
+% Qavg_df = reshape(Qavg_df,[M*N*P,8,8]);
+% clear Qavg;
+
+%% Reduce data size - verify
+S = abs(Qavg_df)>0;
+ind = find(squeeze(S(:,4,4)));
+Qinds = squeeze(Qavg_df(ind,:,:));
+Qind = Qinds; %Store Qind for later.
+obs_pts = length(ind);
+cluster=zeros(1,100); %preallocating for speed.- more than 100 clusters is not effecient
+eph = cluster;
+
+%%
+vop_map = zeros(M*N*P,1);
+indr = 1:length(ind);
+figure;
+dbstop if error;
+VOPm = zeros(500,8,8);
+
+%% Clustering process
+VOP=0;
+label=0;
+
+tic;
+while(obs_pts ~= 0)
+    %% Selection of core matrix
+    
+    if(obs_pts==length(ind))
+        [Bstar,ind_sorta,myu_def] = get_coremat(Qind,indr);
+    else
+        [Bstar,ind_sorta] = get_coremat(Qind,indr);
+    end
+    q=2;
+    A = Bstar;
+       %% Set-up problem to find Z*
+    e=0;
+    Z=zeros(8); %start with a init Z every time for a new cluster.
+    cluster_done=0;
+    obs_pts = obs_pts -1; %corresponding to A.
+    while (cluster_done==0)
+       
+        % Spectral decomposition 
+        Q = A - squeeze(Qind(ind_sorta(q),:,:));
+        [V,E] = eig(Q);
+        Ep = E;
+        Ep(Ep<0)=0;
+        Em = Ep - E;
+        Z_new = V*Em*V';                %Qm = V*E-*V';
+        Z = Z + Z_new;
+        myu_calc = norm(Z,2);
+
+        
+                 if(myu_calc >=myu_def)
+                     %% end of current cluster
+                     cluster_done=1;
+                     VOP = VOP +1;
+                     VOPm(VOP,:,:) =A;
+                     cluster(VOP) = q-1;%this one broke it, so count upto previous one.
+                     
+                     
+                     
+                     
+                     
+                 else
+                     %% continue clustering
+                     A = Bstar + Z;
+                     obs_pts = obs_pts -1;
+                     q = q+1; %for next Q matrix
+                     
+                     
+                     
+                     
+                     
+                     
+                     
+                 end
+        
+        
+        
+        
+    end
+end
